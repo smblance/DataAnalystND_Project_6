@@ -20,16 +20,26 @@ with open('./data/data_unprocessed.csv') as f:
 		else:
 			d[year][country].update({'population': int(value)})
 
+
 d_formatted = {}
+world_population = {}
 for year in d:
+	world_population.update({year: 0})
 	entry = {'year' : year, 'data': {}}
 	for country in d[year]:
 		if country not in d_formatted:
 			d_formatted.update({country: {}})
-		if 'population' in d[year][country].keys() and 'internet' in d[year][country].keys():
-			d_formatted[country].update({year: int(d[year][country]['population'] * d[year][country]['internet'] / 100)})
+		if 'population' in d[year][country].keys(): 
+			world_population[year] += d[year][country]['population']
+			if'internet' in d[year][country].keys():
+				d_formatted[country].update({year: int(d[year][country]['population'] * d[year][country]['internet'] / 100)})
+			else:
+				d_formatted[country].update({year: 0})
 		else:
 			d_formatted[country].update({year: 0})
+
+#some bug?
+d_formatted['Kuwait'].update({'1992' : 0})
 
 del d_formatted['South Asia']
 del d_formatted['North America']
@@ -50,13 +60,19 @@ for country in rename_countries:
 	d_formatted.update({rename_countries[country] : d_formatted[country]})
 	del d_formatted[country]
 
+#explore
+y = 1997
+d1 = [(x,d_formatted[x][y]) for x in d_formatted]
+print sum([x[1] for x in d1 if x[0] != 'United States'])
+print d_formatted['United States'][y]
+exit()
 #pp.pprint(sorted(d_formatted.keys()))
 
-out = []
+data = []
 for country in d_formatted:
 	entry = {'name':country}
 	entry.update(d_formatted[country])
-	out.append(entry)
+	data.append(entry)
 
-with open('./data/data.json','w+') as f:
-	json.dump(out, f)
+# with open('./data/data.json','w+') as f:
+# 	json.dump({'data': data, 'world_population': world_population}, f)
