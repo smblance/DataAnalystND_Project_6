@@ -59,7 +59,7 @@ function draw (json) {
 	var tf = {true:1, false:0}
 
 
-	var tick = 500,
+	var tick = 3000,
 		transition_time = 500;
 
 	var header = d3.select('body')
@@ -74,7 +74,7 @@ function draw (json) {
 		.attr('class', 'annotation')
 		.text(annotation_text[1990])
 
-	var controls = header.append('g').attr('class','controls')
+	var controls = d3.select('body').append('g').attr('class','controls')
 
 	var left_button = controls.append('i')
 		.attr('class', 'fa fa-chevron-left fa-2x');
@@ -85,7 +85,6 @@ function draw (json) {
 	var right_button = controls.append('i')
 		.attr('class', 'fa fa-chevron-right fa-2x')
 		
-
 	var svg_chart = d3.select('body')
 		.append('svg')
 		.attr('width', width + margin)
@@ -241,10 +240,18 @@ function draw (json) {
 			.ease('in-out')
 			.call(axis)
 		
+		var is_annotation = false;
 		for (y in annotation_text) {
 			if (y == year) {
-				annotation.text(annotation_text[year]);
+				is_annotation = true;
+				break;
 			}
+		}
+
+		if (is_annotation) {
+			annotation.text(annotation_text[year]);
+		} else {
+			annotation.text('')
 		}
 
 		data_bars.transition()
@@ -308,6 +315,7 @@ function draw (json) {
 			if (year_idx >= years.length) {
 				clearInterval(year_interval);
 				playing = false;
+				play_pause_button.classed({'fa-pause' : false, 'fa-play': true});
 			} else {
 				update(years[year_idx]);
 				year_idx++;
