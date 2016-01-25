@@ -1,46 +1,12 @@
 function draw (data, world_population, annotation_text) {
-	//convert years and population to integers
-	// for (country in data) {
-	// 	for (year in data[country]) {
-	// 		if (year !== 'name') {
-	// 			data[country][year] = +data[country][year];
-	// 			data[country][+year] = data[country][year];
-	// 			delete data[country][year];
-	// 		}
-	// 	}
-	// }
 
+
+	//-----------------------------
+	//Section 1: initiate variables
+	//-----------------------------
 	var years = [0];
 	for (var i=1990;i<=2015;i++) { years.push(i); }
 	year = 1990;
-
-	var l = {};
-	for (y = 1990; y <=2014; y++) {
-		l[y] = 0;
-		for (country in data) {
-			l[y] += data[country][y]
-		}
-		l[y] /= 1e6
-	}
-	console.log(l)
-	var internet_population_part = {}
-	var internet_population = {}
-	for (c in years) {
-		var year = years[c];
-		internet_population_part[year] = 0
-		for (country in data) {
-			internet_population_part[year] += data[country][year]
-		}
-		internet_population[year] = internet_population_part[year];
-		internet_population_part[year] = d3.round(internet_population_part[year]/world_population[year],4);
-	}
-	console.log(internet_population)
-	console.log(internet_population_part)
-
-	// l = []
-	// for (c in data) {l.push(data[c]['name'])}
-	// console.log(l);
-	// return null;
 
 	var tip = d3.tip()
 		.attr('class', 'd3-tip')
@@ -68,6 +34,50 @@ function draw (data, world_population, annotation_text) {
 	var tick = 3000,
 		transition_time = 1000;
 
+
+	var display = {};
+	//display[1990] - list of countries to show at 1990
+	for (c in years) {
+		display[years[c]] = []
+	}
+	var other = {'name' : 'Other'};
+
+	for (var c in years) {
+		var year = years[c];
+		data.sort((x,y) => y[year] - x[year]);
+		for (i in data.slice(0,bar_num)) {
+			display[year].push(data[i]['name']);
+		}
+		other[year] = d3.sum(data.slice(bar_num), d => d[year]);
+		display[year].push('Other');
+	}
+	data.push(other);
+
+	function get_max_value(year) {
+		var mv = 0
+		for (i in data) {
+			if (display[year].indexOf(data[i]['name']) != -1) {
+				if (mv < data[i][year]) {mv = data[i][year]; }
+			}
+		}
+		return mv;
+	}
+
+	max_value = {}
+	for (y in years) {
+		year = years[y];
+		for (c in move_axis) {
+			if (year <= move_axis[c]) {
+				max_value[year] = get_max_value(move_axis[c]); 
+				break;
+			}
+		}
+	}
+
+	//-----------------------------
+	//Section 2: initiate visual elements
+	//-----------------------------
+
 	var header = d3.select('body')
 		.append('div')
 		.attr('class','header')
@@ -75,16 +85,12 @@ function draw (data, world_population, annotation_text) {
 
 	var title = header.append('h2')
 		.attr('class','title')
-		.text('History of the Internet')
-		// .attr('x', width/2)
-		// .attr('y', 0)
-		// .style('text-anchor', 'middle')
-		// .style('alignment-baseline','hanging');
+		.text('History of the Internet');
 
 	var annotation = header.append('p')
 		.attr('class', 'annotation')
 		.style('width', annotation_width + 'px')
-		.html(annotation_text[1990])
+		.html(annotation_text[1990]);
 
 	var controls = d3.select('body').append('span').attr('class','controls');
 
@@ -151,49 +157,10 @@ function draw (data, world_population, annotation_text) {
   		.style('font-size','10px')
   		.style('margin-right','50px')
 
-	var display = {};
-	//display[1990] - list of countries to show at 1990
-	for (c in years) {
-		display[years[c]] = []
-	}
-	var other = {'name' : 'Other'};
-
-	for (var c in years) {
-		var year = years[c];
-		data.sort((x,y) => y[year] - x[year]);
-		for (i in data.slice(0,bar_num)) {
-			display[year].push(data[i]['name']);
-		}
-		other[year] = d3.sum(data.slice(bar_num), d => d[year]);
-		display[year].push('Other');
-	}
-	data.push(other);
-
-	function get_max_value(year) {
-		var mv = 0
-		for (i in data) {
-			if (display[year].indexOf(data[i]['name']) != -1) {
-				if (mv < data[i][year]) {mv = data[i][year]; }
-			}
-		}
-		return mv;
-	}
-
-	max_value = {}
-	for (y in years) {
-		year = years[y];
-		for (c in move_axis) {
-			if (year <= move_axis[c]) {
-				max_value[year] = get_max_value(move_axis[c]); 
-				break;
-			}
-		}
-	}
-
 	year = 1990;
 
 	var x_scale = d3.scale.linear()
-		.domain([0,max_value[year]])
+		.domain([0,max_value[1990]])
 		.range([0,width - bar_start]);
 
 	var axis = d3.svg.axis()
@@ -226,7 +193,6 @@ function draw (data, world_population, annotation_text) {
 					return position*(bar_height+bar_margin) + axis_height;
 				});
 			
-
 
 	var country_text = svg_bar_chart.selectAll('.country-text')
 			.data(data, d => d['name'])
@@ -287,27 +253,19 @@ function draw (data, world_population, annotation_text) {
 		.style('text-anchor','end')
 		.style('alignment-baseline','middle');
 
-
+	//-----------------------------
+	//Section 3: Update function
+	//-----------------------------
 
 	function update(year) {
 
 		if (year == 2015) {
-			color_interval = setInterval(function() {
-				// data_bars.style('fill', function(d) {
-				// 	return 'rgb(' + Math.floor(Math.random() * 256) + ',' + Math.floor(Math.random() * 256) + ',' + Math.floor(Math.random() * 256) + ')';
-				// });
+			last_year_interval = setInterval(function() {
 				data_bars.transition().duration(transition_time*2).attr('width', x => Math.random()*(width - bar_start))
 			},transition_time); 
 		} else {
-			if (color_interval) {clearInterval(color_interval);}
+			clearInterval(last_year_interval);
 		}
-
-		// color_interval = setInterval(function() {
-		// 	data_bars.style('fill', function(d) {
-		// 		console.log('hi')
-		// 		return 'rgb(' + Math.floor(Math.random() * 256) + ',' + Math.floor(Math.random() * 256) + ',' + Math.floor(Math.random() * 256) + ')';
-		// 	});
-		// },500); 
 
 		switch (year) {
 			case 0:
@@ -318,27 +276,12 @@ function draw (data, world_population, annotation_text) {
 			case 2015:
 				annotation.html(annotation_text[year]);
 				title.text('Internet in the Future');
-				// var color_interval_running = true;
 				year = years[years.length - 2]
 				break;
 			default:
 				annotation.html(annotation_text[year]);
 				title.text('Internet in ' + year);
 		}
-
-		// if (color_interval_running) {clearInterval(color_interval); color_interval_running = false;}
-
-
-		// if (year === 0) {
-		// 	annotation.html(annotation_text[0]);
-		// 	title.text('History of the Internet');
-		// 	year = years[1]; 
-		// } else if (year === ){
-		// 	annotation.html(annotation_text[year]);
-		// 	title.text('Internet in ' + year);
-		// }
-
-		
 
 		x_scale.domain([0,max_value[year]]);
 
@@ -402,24 +345,14 @@ function draw (data, world_population, annotation_text) {
 
 	}
 
-
-	// use skip_update to double the time in years with (annotation != '')
-	// var skip_update = false;
-
+	//-----------------------------
+	//Section 4: define response to interaction
+	//-----------------------------
 
 	function start_interval() {
-		//skip_update = (annotation_text[years[year_idx]] === '')
 
 		year_interval = setInterval(function () {
 			playing = true;
-
-			// if (annotation != '') {
-			// 	if (skip_update) {
-			// 		skip_update = false;
-			// 		return null;
-			// 	}
-			// }
-
 			if (year_idx >= years.length-1) {
 					clearInterval(year_interval);
 					playing = false;
@@ -427,14 +360,13 @@ function draw (data, world_population, annotation_text) {
 				} else {
 					year_idx++;
 					update(years[year_idx]);
-					// skip_update = (annotation_text[years[year_idx]] !== '');
 			}
 		}, tick);
 	}
 	
 	begin_button.on('click', function () {
-		if (year_idx > 1) {
-			year_idx = 1;
+		if (year_idx > 0) {
+			year_idx = 0;
 			update(years[year_idx]);
 		}
 	});
@@ -500,9 +432,7 @@ function draw (data, world_population, annotation_text) {
 	})
 
 	annotation.html(annotation_text[0])
-	var color_interval = null;
-	//started = false;
-	//update(0);
+	var last_year_interval = null;
 	var year_idx = 0;
 	var playing = false;
 	var year_interval;

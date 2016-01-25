@@ -9,7 +9,6 @@ html {
 	font-family: OpenSans;
 }
 
-
 svg {
 	display: block;
 	margin: auto;
@@ -17,8 +16,6 @@ svg {
 
 .data-bar {
 	fill: #0099FF;
-	stroke-width: 0px;
-	stroke: black;
 }
 
 .title {
@@ -38,7 +35,6 @@ p.annotation {
 	margin-left: auto;
 	margin-right: auto;
 	text-align: center;
-	display: block;
 	height: 100px;
 	vertical-align: middle;
 	line-height: 150%;
@@ -58,11 +54,14 @@ p.annotation {
 
 .controls{
 	color: gray;
-	align-items:flex-end;
 }
 
 
 .legend_icon {
 	font-size: 120%;
 	color: yellow;
+}
+
+strong {
+	font-size: 150%;
 }
