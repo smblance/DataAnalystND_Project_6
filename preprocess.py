@@ -65,7 +65,6 @@ y = 1997
 d1 = [(x,d_formatted[x][y]) for x in d_formatted]
 print sum([x[1] for x in d1 if x[0] != 'United States'])
 print d_formatted['United States'][y]
-exit()
 #pp.pprint(sorted(d_formatted.keys()))
 
 data = []
@@ -74,5 +73,8 @@ for country in d_formatted:
 	entry.update(d_formatted[country])
 	data.append(entry)
 
-# with open('./data/data.json','w+') as f:
-# 	json.dump({'data': data, 'world_population': world_population}, f)
+with open('./data/data.json','w+') as f:
+	json.dump(data, f)
+
+with open('./data/world_population.json', 'w+') as f:
+	json.dump(world_population, f)

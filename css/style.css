@@ -5,7 +5,7 @@
   font-style: normal;
 }
 
-* {
+html {
 	font-family: OpenSans;
 }
 
@@ -13,7 +13,6 @@
 svg {
 	display: block;
 	margin: auto;
-	align-items:center;
 }
 
 .data-bar {
@@ -22,7 +21,11 @@ svg {
 	stroke: black;
 }
 
-h2, p.annotation, g.controls {
+.title {
+	font-size: 150%;
+}
+
+h2, .controls {
 	display: block;
 	margin-left: auto;
 	margin-right: auto;
@@ -32,12 +35,34 @@ h2, p.annotation, g.controls {
 }
 
 p.annotation {
-	height: 60px;
-	width: 600px;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	display: block;
+	height: 100px;
+	vertical-align: middle;
+	line-height: 150%;
 }
 
 .fa-pause, .fa-play {
 	margin-left: 40px;
 	margin-right: 40px;
 	margin-bottom: 20px;
+}
+
+.fa-angle-double-left, .fa-angle-double-right {
+	margin-right: 20px; 
+	margin-left: 20px;
+}
+
+
+.controls{
+	color: gray;
+	align-items:flex-end;
+}
+
+
+.legend_icon {
+	font-size: 120%;
+	color: yellow;
 }
