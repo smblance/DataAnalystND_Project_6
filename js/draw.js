@@ -19,13 +19,18 @@ function draw (data, world_population, annotation_text) {
 		margin = 0,
 		width = 800 - margin,
 		annotation_width = 800,
+		annotation_height = 100,
 		bar_start = width/2,
 		value_text_width = 70,
 		value_text_bar_margin = 5,
 		increase_text_width = 100,
 		value_text_size = 10,
-		axis_height = 30,
-		height = (bar_height+bar_margin)*(bar_num+1) + margin + axis_height;
+		axis_height = 30;
+
+	if ((bar_height+bar_margin)*(bar_num+1) + margin + axis_height + annotation_height + 32 + 72 + 53 + 14 > window.innerHeight) {
+		bar_num = (window.innerHeight - (margin + axis_height + annotation_height + 32 + 72 + 53 + 14))/(bar_height + bar_margin) - 1
+	}
+	var height = (bar_height+bar_margin)*(bar_num+1) + margin + axis_height;
 
 	var move_axis = [1995, 2002, 2009, 2014]
 
@@ -44,11 +49,11 @@ function draw (data, world_population, annotation_text) {
 
 	for (var c in years) {
 		var year = years[c];
-		data.sort((x,y) => y[year] - x[year]);
+		data.sort(function(x,y) { return y[year] - x[year]; });
 		for (i in data.slice(0,bar_num)) {
 			display[year].push(data[i]['name']);
 		}
-		other[year] = d3.sum(data.slice(bar_num), d => d[year]);
+		other[year] = d3.sum(data.slice(bar_num), function(d) { return d[year] });
 		display[year].push('Other');
 	}
 	data.push(other);
@@ -90,6 +95,7 @@ function draw (data, world_population, annotation_text) {
 	var annotation = header.append('p')
 		.attr('class', 'annotation')
 		.style('width', annotation_width + 'px')
+		.style('height', annotation_height + 'px')
 		.html(annotation_text[1990]);
 
 	var controls = d3.select('body').append('span').attr('class','controls');
@@ -142,7 +148,7 @@ function draw (data, world_population, annotation_text) {
 		.attr('y', axis_height/2)
 		.attr('class', 'legend_icon')
 		.attr('fill', '')
-		.text('\uf201')
+		.text('\uf148')
 		.style('text-anchor', 'end')
 		.style('alignment-baseline','middle')
 		.style('font-family','FontAwesome')
@@ -150,12 +156,16 @@ function draw (data, world_population, annotation_text) {
 		.on('mouseover', tip.show)
   		.on('mouseout', tip.hide)
 
+  	
+
 
   	d3.select('body').append('p')
   		.html('Data: <a href="http://knoema.com/WBWDIGDF2015Dec/world-development-indicators-wdi-december-2015" target="_blank">World Bank</a>')
   		.style('text-align','right')
   		.style('font-size','10px')
   		.style('margin-right','50px')
+  		.style('margin-top','0px')
+  		.style('margin-bottom','0px');
 
 	year = 1990;
 
@@ -179,13 +189,13 @@ function draw (data, world_population, annotation_text) {
         .call(axis);
 
 	var data_bars = svg_bar_chart.selectAll('.data-bar')
-			.data(data, d => d['name'])
+			.data(data, function(d) { return d['name']; })
 			.enter()
 			.append('rect')
 			.attr('class', 'data-bar')
-			.attr('country', d => d['name'].replace(' ','_'))
+			.attr('country', function(d) { return d['name'].replace(' ','_'); })
 			.attr('height', bar_height)
-			.attr('width', d => x_scale(d[year]) )
+			.attr('width', function(d) { return x_scale(d[year]); })
 			.attr('x', bar_start)
 			.attr('y',  function (d) {
 					var position = display[year].indexOf(d['name']);
@@ -195,12 +205,12 @@ function draw (data, world_population, annotation_text) {
 			
 
 	var country_text = svg_bar_chart.selectAll('.country-text')
-			.data(data, d => d['name'])
+			.data(data, function(d) { return d['name']; })
 			.enter()
 			.append('text')
-			.text(d => d['name'])
+			.text(function(d) { return d['name']; })
 			.attr('class', 'country-text')
-			.attr('country', d => d['name'].replace(' ','_'))
+			.attr('country', function(d) { return d['name'].replace(' ','_'); })
 			.attr('x', bar_start - value_text_bar_margin - value_text_width - increase_text_width)
 			.attr('y', function (d) {
 					if (display[year].indexOf(d['name']) !== -1)
@@ -212,16 +222,16 @@ function draw (data, world_population, annotation_text) {
 				})
 			.style('text-anchor', 'end')
 			.style('alignment-baseline','middle')
-			.style('fill-opacity', d => tf[(display[year].indexOf(d['name']) != -1)]);
+			.style('fill-opacity', function(d) { return tf[(display[year].indexOf(d['name']) != -1)]; });
 				
 	var value_text = svg_bar_chart.selectAll('.value-text')
-			.data(data, d => d['name'])
+			.data(data, function(d) { return d['name']; })
 			.enter()
 			.append('text')
 			.attr('class', 'value-text')
-			.attr('country', d => d['name'].replace(' ','_'))
-			.text(d => number_to_text(d[year]) )
-			.attr('x', d => bar_start - value_text_bar_margin)
+			.attr('country', function(d) { return d['name'].replace(' ','_'); })
+			.text(function(d) { return number_to_text(d[year]); })
+			.attr('x', function(d) { return bar_start - value_text_bar_margin; })
 			.attr('y', function (d) {
 					if (display[year].indexOf(d['name']) !== -1) {
 						return (bar_height+bar_margin)*display[year].indexOf(d['name']) + bar_height/2 + axis_height;
@@ -230,18 +240,18 @@ function draw (data, world_population, annotation_text) {
 					}
 					// return bar_num*(bar_height+bar_margin) + bar_height/2 + axis_height;
 				})
-			.style('fill-opacity', d => tf[(display[year].indexOf(d['name']) != -1)])
+			.style('fill-opacity', function(d) { return tf[(display[year].indexOf(d['name']) != -1)]; })
 			.style('text-anchor','end')
 			.style('alignment-baseline','middle');
 			
 
 	var increase_text = svg_bar_chart.selectAll('.increase-text')
-		.data(data, d => d['name'])
+		.data(data, function(d)  { return d['name']; })
 		.enter()
 		.append('text')
 		.attr('class', 'increase-text')
-		.attr('country', d => d['name'].replace(' ','_'))
-		.attr('x', d => bar_start - value_text_bar_margin - value_text_width)
+		.attr('country', function(d) { return d['name'].replace(' ','_'); })
+		.attr('x', function(d) { return bar_start - value_text_bar_margin - value_text_width; })
 		.attr('y', function (d) {
 				if (display[year].indexOf(d['name']) !== -1) {
 					return (bar_height+bar_margin)*display[year].indexOf(d['name']) + bar_height/2 + axis_height;
@@ -249,7 +259,7 @@ function draw (data, world_population, annotation_text) {
 					return bar_num*(bar_height+bar_margin) + axis_height;
 				}
 			})
-		.style('fill-opacity', d => tf[(display[year].indexOf(d['name']) != -1)])
+		.style('fill-opacity', function(d) { return tf[(display[year].indexOf(d['name']) != -1)]; })
 		.style('text-anchor','end')
 		.style('alignment-baseline','middle');
 
@@ -259,13 +269,13 @@ function draw (data, world_population, annotation_text) {
 
 	function update(year) {
 
-		if (year == 2015) {
-			last_year_interval = setInterval(function() {
-				data_bars.transition().duration(transition_time*2).attr('width', x => Math.random()*(width - bar_start))
-			},transition_time); 
-		} else {
-			clearInterval(last_year_interval);
-		}
+		// if (year == 2015) {
+		// 	last_year_interval = setInterval(function() {
+		// 		data_bars.transition().duration(transition_time*2).attr('width', function(d) { return Math.random()*(width - bar_start) });
+		// 	},transition_time); 
+		// } else {
+		// 	clearInterval(last_year_interval);
+		// }
 
 		switch (year) {
 			case 0:
@@ -294,7 +304,12 @@ function draw (data, world_population, annotation_text) {
 
 		data_bars.transition()
 			.duration(transition_time)
-			.attr('width', d => x_scale(d[year]) )
+			.attr('width', function(d) {
+				return x_scale(d[year]);
+			})
+			.style('fill-opacity', function(d) {
+				return tf[(display[year].indexOf(d['name']) != -1)];
+			})
 			.attr('y',  function (d) {
 					var position = display[year].indexOf(d['name']);
 					if (position === -1) { position = bar_num; }
@@ -303,7 +318,9 @@ function draw (data, world_population, annotation_text) {
 		
 		country_text.transition()
 			.duration(transition_time)
-			.style('fill-opacity', d => tf[(display[year].indexOf(d['name']) != -1)])
+			.style('fill-opacity', function(d) {
+				return tf[(display[year].indexOf(d['name']) != -1)];
+			})
 			.attr('y', function (d) {
 					if (display[year].indexOf(d['name']) !== -1)
 						{ return (bar_height+bar_margin)*display[year].indexOf(d['name']) + bar_height/2 + axis_height; }
@@ -312,10 +329,14 @@ function draw (data, world_population, annotation_text) {
 					}
 				})
 
-		value_text.text(d => number_to_text(d[year]) )
+		value_text.text(function(d) {
+				number_to_text(d[year]) 
+			})
 			.transition()
 			.duration(transition_time)
-			.style('fill-opacity', d => tf[(display[year].indexOf(d['name']) != -1)])
+			.style('fill-opacity', function(d) {
+				return tf[(display[year].indexOf(d['name']) != -1)];
+			})
 			.attr('y', function (d) {
 					if (display[year].indexOf(d['name']) !== -1) {
 						return (bar_height+bar_margin)*display[year].indexOf(d['name']) + bar_height/2 + axis_height;
@@ -334,7 +355,9 @@ function draw (data, world_population, annotation_text) {
 			})
 			.transition()
 			.duration(transition_time)
-			.style('fill-opacity', d => tf[(display[year].indexOf(d['name']) != -1)])
+			.style('fill-opacity', function(d) {
+				return tf[(display[year].indexOf(d['name']) != -1)];
+			})
 			.attr('y', function (d) {
 					if (display[year].indexOf(d['name']) !== -1) {
 						return (bar_height+bar_margin)*display[year].indexOf(d['name']) + bar_height/2 + axis_height;
