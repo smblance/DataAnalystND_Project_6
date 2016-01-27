@@ -11,11 +11,9 @@
 <body>
   	<script type="text/javascript">
 		d3.json("./data/data.json", function(data) {
-			d3.json("./data/world_population.json", function(world_population) {
-				d3.json('./data/annotation.json', function (annotation_text) {
-					draw(data,world_population,annotation_text)
-				});
-			});
+			d3.json('./data/annotation.json', function (annotation_text) {
+				draw(data, annotation_text)
+      });
 		});
   	</script>
   	

@@ -2,8 +2,8 @@ import csv, json, re
 import pprint
 pp = pprint.PrettyPrinter()
 
-
-d = {}
+internet_percentage = {}
+country_population = {}
 with open('./data/data_unprocessed.csv') as f:
 	reader = csv.DictReader(f)
 	for row in reader:
@@ -11,38 +11,28 @@ with open('./data/data_unprocessed.csv') as f:
 		series = row['series']
 		year = int(re.search('20[01]\d|199\d', row['Date']).group(0))
 		value = row['Value']
-		if year not in d:
-			d.update({year: {}})
-		if country not in d[year]:
-			d[year].update({country: {}})
+		if country not in internet_percentage:
+			internet_percentage[country] = {}
+		if country not in country_population:
+			country_population[country] = {}
+
+		if year not in internet_percentage[country]:
+			internet_percentage[country][year] = {}
+		if year not in country_population[country]:
+			country_population[country][year] = {}
+
 		if 'Internet' in series:
-			d[year][country].update({'internet' : float(value)})
+			internet_percentage[country][year] = float(value)
 		else:
-			d[year][country].update({'population': int(value)})
+			country_population[country][year] = int(value)
 
 
-d_formatted = {}
-world_population = {}
-for year in d:
-	world_population.update({year: 0})
-	entry = {'year' : year, 'data': {}}
-	for country in d[year]:
-		if country not in d_formatted:
-			d_formatted.update({country: {}})
-		if 'population' in d[year][country].keys(): 
-			world_population[year] += d[year][country]['population']
-			if'internet' in d[year][country].keys():
-				d_formatted[country].update({year: int(d[year][country]['population'] * d[year][country]['internet'] / 100)})
-			else:
-				d_formatted[country].update({year: 0})
-		else:
-			d_formatted[country].update({year: 0})
-
-#some bug?
-d_formatted['Kuwait'].update({'1992' : 0})
-
-del d_formatted['South Asia']
-del d_formatted['North America']
+# print internet_percentage['Canada']
+# print country_population['Canada']
+del internet_percentage['South Asia']
+del internet_percentage['North America']
+del country_population['South Asia']
+del country_population['North America']
 rename_countries = {
  'Egypt, Arab Rep.' : 'Egypt',
  'Hong Kong SAR, China' : 'Hong Kong',
@@ -55,26 +45,27 @@ rename_countries = {
  'Syrian Arab Republic' : 'Syria',
  'United Arab Emirates' : 'UAE'
  }
+for name in rename_countries:
+	internet_percentage[rename_countries[name]] = internet_percentage[name]
+	del internet_percentage[name]
 
-for country in rename_countries:
-	d_formatted.update({rename_countries[country] : d_formatted[country]})
-	del d_formatted[country]
+	country_population[rename_countries[name]] = country_population[name]
+	del country_population[name]
 
-#explore
-y = 1997
-d1 = [(x,d_formatted[x][y]) for x in d_formatted]
-print sum([x[1] for x in d1 if x[0] != 'United States'])
-print d_formatted['United States'][y]
-#pp.pprint(sorted(d_formatted.keys()))
 
-data = []
-for country in d_formatted:
-	entry = {'name':country}
-	entry.update(d_formatted[country])
-	data.append(entry)
 
-with open('./data/data.json','w+') as f:
-	json.dump(data, f)
+l = []
+for country in internet_percentage:
+	entry = {'name' : country}
+	entry['internet_pct'] = internet_percentage[country]
+	entry['population'] = country_population[country]
+	l.append(entry)
 
-with open('./data/world_population.json', 'w+') as f:
-	json.dump(world_population, f)
+# with open('data/internet_percentage.json','w+') as f:
+# 	json.dump(internet_percentage, f)
+
+# with open('data/country_population.json','w+') as f:
+# 	json.dump(country_population, f)
+
+with open('data/data.json','w+') as f:
+	json.dump(l, f)

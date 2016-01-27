@@ -1,12 +1,22 @@
-function draw (data, world_population, annotation_text) {
+function draw (data, annotation_text) {
 
 
 	//-----------------------------
 	//Section 1: initiate variables
 	//-----------------------------
+
+	for (country in data) {
+		data[country]['internet_population'] = {}
+		for (year in data[country]['internet_pct']) {
+			data[country]['internet_population'][year] = parseInt(data[country]['internet_pct'][year] * data[country]['population'][year] / 100)
+			if (!data[country]['internet_population'][year]) {data[country]['internet_population'][year] = 0;}
+			if (!data[country]['internet_pct'][year]) {data[country]['internet_pct'][year] = 0;}
+			if (!data[country]['population'][year]) {data[country]['population'][year] = 0;}
+		}
+	}
+
 	var years = [0];
 	for (var i=1990;i<=2015;i++) { years.push(i); }
-	year = 1990;
 
 	var tip = d3.tip()
 		.attr('class', 'd3-tip')
@@ -23,7 +33,8 @@ function draw (data, world_population, annotation_text) {
 		bar_start = width/2,
 		value_text_width = 70,
 		value_text_bar_margin = 5,
-		increase_text_width = 100,
+		increase_text_width = 60,
+		internet_percentage_width = 60,
 		value_text_size = 10,
 		axis_height = 30;
 
@@ -39,21 +50,23 @@ function draw (data, world_population, annotation_text) {
 	var tick = 3000,
 		transition_time = 1000;
 
-
 	var display = {};
 	//display[1990] - list of countries to show at 1990
 	for (c in years) {
 		display[years[c]] = []
 	}
-	var other = {'name' : 'Other'};
 
+	var other = {'name' : 'Other'};
 	for (var c in years) {
 		var year = years[c];
-		data.sort(function(x,y) { return y[year] - x[year]; });
+		data.sort(function(x,y) { return (y['internet_population'][year] - x['internet_population'][year]); });
 		for (i in data.slice(0,bar_num)) {
 			display[year].push(data[i]['name']);
 		}
-		other[year] = d3.sum(data.slice(bar_num), function(d) { return d[year] });
+		if (!other['internet_population']) {other['internet_population'] = {}; }
+		if (!other['internet_pct']) {other['internet_pct'] = {}; }
+		other['internet_population'][year] = d3.sum(data.slice(bar_num), function(d) { return d['internet_population'][year] });
+		other['internet_pct'][year] = d3.round(d3.sum(data.slice(bar_num), function(d) { return d['internet_population'][year]}) / d3.sum(data.slice(bar_num), function(d) { return d['population'][year]}) * 100, 2);
 		display[year].push('Other');
 	}
 	data.push(other);
@@ -62,7 +75,7 @@ function draw (data, world_population, annotation_text) {
 		var mv = 0
 		for (i in data) {
 			if (display[year].indexOf(data[i]['name']) != -1) {
-				if (mv < data[i][year]) {mv = data[i][year]; }
+				if (mv < data[i]['internet_population'][year]) {mv = data[i]['internet_population'][year]; }
 			}
 		}
 		return mv;
@@ -82,6 +95,8 @@ function draw (data, world_population, annotation_text) {
 	//-----------------------------
 	//Section 2: initiate visual elements
 	//-----------------------------
+	year = 1990;
+
 
 	var header = d3.select('body')
 		.append('div')
@@ -129,6 +144,7 @@ function draw (data, world_population, annotation_text) {
 		.attr('height', height + 2*margin)
 		.call(tip)
 
+	// users icon
 	svg_bar_chart.append('text')
 		.attr('x', bar_start - 10)
 		.attr('y', axis_height/2)
@@ -142,7 +158,7 @@ function draw (data, world_population, annotation_text) {
   		.on('mouseover', tip.show)
   		.on('mouseout', tip.hide)
 
-
+  	// increase percent icon
 	svg_bar_chart.append('text')
 		.attr('x', bar_start - value_text_width - 10)
 		.attr('y', axis_height/2)
@@ -152,11 +168,23 @@ function draw (data, world_population, annotation_text) {
 		.style('text-anchor', 'end')
 		.style('alignment-baseline','middle')
 		.style('font-family','FontAwesome')
-		.data(['Increase from previous year'])
+		.data(['Increase in users from previous year'])
 		.on('mouseover', tip.show)
   		.on('mouseout', tip.hide)
 
-  	
+  	// percent of population icon
+	svg_bar_chart.append('text')
+		.attr('x', bar_start - internet_percentage_width - value_text_width - 10)
+		.attr('y', axis_height/2)
+		.attr('class', 'legend_icon')
+		.attr('fill', '')
+		.text('\uf295')
+		.style('text-anchor', 'end')
+		.style('alignment-baseline','middle')
+		.style('font-family','FontAwesome')
+		.data(['Percentage of population using Internet'])
+		.on('mouseover', tip.show)
+  		.on('mouseout', tip.hide)
 
 
   	d3.select('body').append('p')
@@ -166,8 +194,6 @@ function draw (data, world_population, annotation_text) {
   		.style('margin-right','50px')
   		.style('margin-top','0px')
   		.style('margin-bottom','0px');
-
-	year = 1990;
 
 	var x_scale = d3.scale.linear()
 		.domain([0,max_value[1990]])
@@ -195,7 +221,7 @@ function draw (data, world_population, annotation_text) {
 			.attr('class', 'data-bar')
 			.attr('country', function(d) { return d['name'].replace(' ','_'); })
 			.attr('height', bar_height)
-			.attr('width', function(d) { return x_scale(d[year]); })
+			.attr('width', function(d) { return x_scale(d['internet_population'][year]); })
 			.attr('x', bar_start)
 			.attr('y',  function (d) {
 					var position = display[year].indexOf(d['name']);
@@ -211,14 +237,13 @@ function draw (data, world_population, annotation_text) {
 			.text(function(d) { return d['name']; })
 			.attr('class', 'country-text')
 			.attr('country', function(d) { return d['name'].replace(' ','_'); })
-			.attr('x', bar_start - value_text_bar_margin - value_text_width - increase_text_width)
+			.attr('x', bar_start - value_text_bar_margin - value_text_width - increase_text_width - internet_percentage_width)
 			.attr('y', function (d) {
 					if (display[year].indexOf(d['name']) !== -1)
 						{ return (bar_height+bar_margin)*display[year].indexOf(d['name']) + bar_height/2 + axis_height; }
 					else {
 						return bar_num*(bar_height+bar_margin) + bar_height/2 + axis_height;
 					}
-					// return bar_num*(bar_height+bar_margin) + bar_height/2 + axis_height;
 				})
 			.style('text-anchor', 'end')
 			.style('alignment-baseline','middle')
@@ -230,7 +255,7 @@ function draw (data, world_population, annotation_text) {
 			.append('text')
 			.attr('class', 'value-text')
 			.attr('country', function(d) { return d['name'].replace(' ','_'); })
-			.text(function(d) { return number_to_text(d[year]); })
+			.text(function(d) { return number_to_text(d['internet_population'][year]); })
 			.attr('x', function(d) { return bar_start - value_text_bar_margin; })
 			.attr('y', function (d) {
 					if (display[year].indexOf(d['name']) !== -1) {
@@ -238,7 +263,6 @@ function draw (data, world_population, annotation_text) {
 					} else {
 						return bar_num*(bar_height+bar_margin) + bar_height/2 + axis_height;
 					}
-					// return bar_num*(bar_height+bar_margin) + bar_height/2 + axis_height;
 				})
 			.style('fill-opacity', function(d) { return tf[(display[year].indexOf(d['name']) != -1)]; })
 			.style('text-anchor','end')
@@ -262,6 +286,32 @@ function draw (data, world_population, annotation_text) {
 		.style('fill-opacity', function(d) { return tf[(display[year].indexOf(d['name']) != -1)]; })
 		.style('text-anchor','end')
 		.style('alignment-baseline','middle');
+
+
+	var percentage_text = svg_bar_chart.selectAll('.percentage-text')
+		.data(data, function(d)  { return d['name']; })
+		.enter()
+		.append('text')
+		.attr('class', 'percentage-text')
+		.attr('country', function(d) { return d['name'].replace(' ','_'); })
+		.text(function(d) { 
+			if (d['internet_pct'][year] < 1) {
+				return '<1%'
+			}
+			return d3.round(d['internet_pct'][year],0) + '%'; 
+		})
+		.attr('x', function(d) { return bar_start - value_text_bar_margin - value_text_width - internet_percentage_width; })
+		.attr('y', function (d) {
+				if (display[year].indexOf(d['name']) !== -1) {
+					return (bar_height+bar_margin)*display[year].indexOf(d['name']) + bar_height/2 + axis_height;
+				} else {
+					return bar_num*(bar_height+bar_margin) + axis_height;
+				}
+			})
+		.style('fill-opacity', function(d) { return tf[(display[year].indexOf(d['name']) != -1)]; })
+		.style('text-anchor','end')
+		.style('alignment-baseline','middle');
+
 
 	//-----------------------------
 	//Section 3: Update function
@@ -305,10 +355,10 @@ function draw (data, world_population, annotation_text) {
 		data_bars.transition()
 			.duration(transition_time)
 			.attr('width', function(d) {
-				return x_scale(d[year]);
+				return x_scale(d['internet_population'][year]);
 			})
 			.style('fill-opacity', function(d) {
-				return tf[(display[year].indexOf(d['name']) != -1)];
+				return tf[(display[year].indexOf(d['name']) !== -1)];
 			})
 			.attr('y',  function (d) {
 					var position = display[year].indexOf(d['name']);
@@ -319,7 +369,7 @@ function draw (data, world_population, annotation_text) {
 		country_text.transition()
 			.duration(transition_time)
 			.style('fill-opacity', function(d) {
-				return tf[(display[year].indexOf(d['name']) != -1)];
+				return tf[(display[year].indexOf(d['name']) !== -1)];
 			})
 			.attr('y', function (d) {
 					if (display[year].indexOf(d['name']) !== -1)
@@ -330,7 +380,28 @@ function draw (data, world_population, annotation_text) {
 				})
 
 		value_text.text(function(d) {
-				number_to_text(d[year]) 
+				return number_to_text(d['internet_population'][year]);
+			})
+			.transition()
+			.duration(transition_time)
+			.style('fill-opacity', function(d) {
+				return tf[(display[year].indexOf(d['name']) !== -1)];
+			})
+			.attr('y', function (d) {
+					if (display[year].indexOf(d['name']) !== -1) {
+						return (bar_height+bar_margin)*display[year].indexOf(d['name']) + bar_height/2 + axis_height;
+
+					} else {
+						return (bar_height + bar_margin)*bar_num + bar_height/2 + axis_height;
+					}
+				})
+
+		increase_text.text(function(d) {
+				if (year > 1990) {
+					return d3.round((d['internet_population'][year]/d['internet_population'][year-1]-1)*100,0) + '%';
+				} else {
+					return '';
+				}
 			})
 			.transition()
 			.duration(transition_time)
@@ -340,18 +411,16 @@ function draw (data, world_population, annotation_text) {
 			.attr('y', function (d) {
 					if (display[year].indexOf(d['name']) !== -1) {
 						return (bar_height+bar_margin)*display[year].indexOf(d['name']) + bar_height/2 + axis_height;
-
 					} else {
-						return bar_height*bar_num + bar_height/2 + axis_height;
+						return (bar_height+bar_margin)*bar_num + axis_height;
 					}
-				})
+				});
 
-		increase_text.text(function(d) {
-				if (year > 1990) {
-					return d3.round((d[year]/d[year-1]-1)*100,0) + '%';
-				} else {
-					return '';
+		percentage_text.text(function(d) {
+				if (d['internet_pct'][year] < 1) {
+					return '<1%'
 				}
+				return d3.round(d['internet_pct'][year],0) + '%';
 			})
 			.transition()
 			.duration(transition_time)
