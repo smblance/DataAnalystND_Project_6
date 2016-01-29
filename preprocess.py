@@ -61,11 +61,5 @@ for country in internet_percentage:
 	entry['population'] = country_population[country]
 	l.append(entry)
 
-# with open('data/internet_percentage.json','w+') as f:
-# 	json.dump(internet_percentage, f)
-
-# with open('data/country_population.json','w+') as f:
-# 	json.dump(country_population, f)
-
 with open('data/data.json','w+') as f:
 	json.dump(l, f)
