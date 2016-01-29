@@ -5,6 +5,7 @@ function draw (data, annotation_text) {
 	//Section 1: initiate variables
 	//-----------------------------
 
+	// calculate internet_population, add missing values as 0s
 	for (country in data) {
 		data[country]['internet_population'] = {}
 		for (year in data[country]['internet_pct']) {
@@ -38,13 +39,16 @@ function draw (data, annotation_text) {
 		value_text_size = 10,
 		axis_height = 30;
 
+	// If too many bars to fit on screen, reduce number of bars
 	if ((bar_height+bar_margin)*(bar_num+1) + margin + axis_height + annotation_height + 32 + 72 + 53 + 14 > window.innerHeight) {
 		bar_num = (window.innerHeight - (margin + axis_height + annotation_height + 32 + 72 + 53 + 14))/(bar_height + bar_margin) - 1
 	}
 	var height = (bar_height+bar_margin)*(bar_num+1) + margin + axis_height;
 
+	// On which years to move axis. Between these years axis doesn't change
 	var move_axis = [1995, 2002, 2009, 2014]
 
+	// Convert between diplay values and opacity
 	var tf = {true:1, false:0}
 
 	var tick = 3000,
@@ -56,6 +60,7 @@ function draw (data, annotation_text) {
 		display[years[c]] = []
 	}
 
+	// fill in display, add 'other' to data
 	var other = {'name' : 'Other'};
 	for (var c in years) {
 		var year = years[c];
@@ -71,6 +76,7 @@ function draw (data, annotation_text) {
 	}
 	data.push(other);
 
+	// max internet populaton between countries for each year
 	function get_max_value(year) {
 		var mv = 0
 		for (i in data) {
@@ -81,6 +87,7 @@ function draw (data, annotation_text) {
 		return mv;
 	}
 
+	// move axis only on years in move_axis array
 	max_value = {}
 	for (y in years) {
 		year = years[y];
@@ -96,7 +103,6 @@ function draw (data, annotation_text) {
 	//Section 2: initiate visual elements
 	//-----------------------------
 	year = 1990;
-
 
 	var header = d3.select('body')
 		.append('div')
@@ -130,6 +136,7 @@ function draw (data, annotation_text) {
 	var end_button = controls.append('i')
 		.attr('class', 'fa fa-angle-double-right fa-2x')
 
+	// make controls darker on mouseover
 	controls.selectAll('*').on('mouseover', function() {
 			d3.select(this).style('color', 'black');
 		})
@@ -186,7 +193,7 @@ function draw (data, annotation_text) {
 		.on('mouseover', tip.show)
   		.on('mouseout', tip.hide)
 
-
+  	// Link to the data in bottom right corner
   	d3.select('body').append('p')
   		.html('Data: <a href="http://knoema.com/WBWDIGDF2015Dec/world-development-indicators-wdi-december-2015" target="_blank">World Bank</a>')
   		.style('text-align','right')
@@ -229,7 +236,6 @@ function draw (data, annotation_text) {
 					return position*(bar_height+bar_margin) + axis_height;
 				});
 			
-
 	var country_text = svg_bar_chart.selectAll('.country-text')
 			.data(data, function(d) { return d['name']; })
 			.enter()
@@ -319,6 +325,7 @@ function draw (data, annotation_text) {
 
 	function update(year) {
 
+		// enable this for 'equalizer' animation on the last year. Fun!
 		// if (year == 2015) {
 		// 	last_year_interval = setInterval(function() {
 		// 		data_bars.transition().duration(transition_time*2).attr('width', function(d) { return Math.random()*(width - bar_start) });
@@ -345,13 +352,14 @@ function draw (data, annotation_text) {
 
 		x_scale.domain([0,max_value[year]]);
 
+		// update axis
 		d3.select('.axis')
 			.transition()
 			.duration(transition_time)
 			.ease('in-out')
 			.call(axis)
 
-
+		// update bars
 		data_bars.transition()
 			.duration(transition_time)
 			.attr('width', function(d) {
@@ -366,6 +374,7 @@ function draw (data, annotation_text) {
 					return position*(bar_height+bar_margin) + axis_height;
 				});
 		
+		// update country_text
 		country_text.transition()
 			.duration(transition_time)
 			.style('fill-opacity', function(d) {
@@ -379,6 +388,7 @@ function draw (data, annotation_text) {
 					}
 				})
 
+		// update internet_population values
 		value_text.text(function(d) {
 				return number_to_text(d['internet_population'][year]);
 			})
@@ -396,6 +406,7 @@ function draw (data, annotation_text) {
 					}
 				})
 
+		// update increase from previous year
 		increase_text.text(function(d) {
 				if (year > 1990) {
 					return d3.round((d['internet_population'][year]/d['internet_population'][year-1]-1)*100,0) + '%';
@@ -416,6 +427,7 @@ function draw (data, annotation_text) {
 					}
 				});
 
+		// update internet percentage text
 		percentage_text.text(function(d) {
 				if (d['internet_pct'][year] < 1) {
 					return '<1%'
@@ -456,6 +468,8 @@ function draw (data, annotation_text) {
 		}, tick);
 	}
 	
+	// assign actions to buttons
+
 	begin_button.on('click', function () {
 		if (year_idx > 0) {
 			year_idx = 0;
@@ -467,6 +481,7 @@ function draw (data, annotation_text) {
 		if (year_idx > 0) {update(years[year_idx-1]); year_idx--;}
 	})
 
+	// assign same actions as buttons to key clicks
 	d3.select('body').on('keydown', function () {
 		switch (d3.event.keyCode) {
 			case 32:
@@ -523,6 +538,7 @@ function draw (data, annotation_text) {
 		}
 	})
 
+	// start the interval
 	annotation.html(annotation_text[0])
 	var last_year_interval = null;
 	var year_idx = 0;
@@ -531,6 +547,7 @@ function draw (data, annotation_text) {
 
 }
 
+// Return shorter representation of values: 2000000 -> 2M
 function number_to_text(n) {
 	if (n >= 1e9) {
 		return d3.round(n/1e9,1) + 'B';
