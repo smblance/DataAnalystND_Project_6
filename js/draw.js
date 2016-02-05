@@ -221,6 +221,7 @@ function draw (data, annotation_text) {
 		.attr('transform', 'translate(' + bar_start + ',0)')
         .call(axis);
 
+    //initialize data bars: bind data and set size and position to initial state
 	var data_bars = svg_bar_chart.selectAll('.data-bar')
 			.data(data, function(d) { return d['name']; })
 			.enter()
@@ -235,7 +236,8 @@ function draw (data, annotation_text) {
 					if (position === -1) { position = bar_num + 1; }
 					return position*(bar_height+bar_margin) + axis_height;
 				});
-			
+
+	//initialize country text: bind data, set position and opacity to initial state, and set proper text anchor
 	var country_text = svg_bar_chart.selectAll('.country-text')
 			.data(data, function(d) { return d['name']; })
 			.enter()
@@ -254,7 +256,8 @@ function draw (data, annotation_text) {
 			.style('text-anchor', 'end')
 			.style('alignment-baseline','middle')
 			.style('fill-opacity', function(d) { return tf[(display[year].indexOf(d['name']) != -1)]; });
-				
+
+	//initialize internet population value text: bind data, set position and opacity to initial state, and set proper text anchor
 	var value_text = svg_bar_chart.selectAll('.value-text')
 			.data(data, function(d) { return d['name']; })
 			.enter()
@@ -274,7 +277,7 @@ function draw (data, annotation_text) {
 			.style('text-anchor','end')
 			.style('alignment-baseline','middle');
 			
-
+	//initialize internet population increase text: bind data, set position and opacity to initial state, and set proper text anchor
 	var increase_text = svg_bar_chart.selectAll('.increase-text')
 		.data(data, function(d)  { return d['name']; })
 		.enter()
@@ -293,7 +296,7 @@ function draw (data, annotation_text) {
 		.style('text-anchor','end')
 		.style('alignment-baseline','middle');
 
-
+	//initialize internet population percentage text: bind data, set position and opacity to initial state, and set proper text anchor
 	var percentage_text = svg_bar_chart.selectAll('.percentage-text')
 		.data(data, function(d)  { return d['name']; })
 		.enter()
