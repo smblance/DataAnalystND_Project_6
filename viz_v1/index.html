@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="js/d3.v3.min.js"></script>
+  <script src="js/d3.tip.js"></script>
+  <script src="js/draw.js"></script>
+  <link rel="stylesheet" href="css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  	<script type="text/javascript">
+		d3.json("./data/data.json", function(data) {
+			d3.json("./data/world_population.json", function(world_population) {
+				d3.json('./data/annotation.json', function (annotation_text) {
+					draw(data,world_population,annotation_text)
+				});
+			});
+		});
+  	</script>
+  	
+
+</body>
+</html>

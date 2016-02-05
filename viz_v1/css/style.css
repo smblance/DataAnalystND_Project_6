@@ -1,0 +1,67 @@
+@font-face {
+  font-family: 'OpenSans';
+  src: url('../fonts/opensans.ttf');
+  font-weight: normal;
+  font-style: normal;
+}
+
+html {
+	font-family: OpenSans;
+}
+
+svg {
+	display: block;
+	margin: auto;
+}
+
+.data-bar {
+	fill: #0099FF;
+}
+
+.title {
+	font-size: 150%;
+}
+
+h2, .controls {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	text-align: center
+}
+
+p.annotation {
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	height: 100px;
+	vertical-align: middle;
+	line-height: 150%;
+}
+
+.fa-pause, .fa-play {
+	margin-left: 40px;
+	margin-right: 40px;
+	margin-bottom: 20px;
+}
+
+.fa-angle-double-left, .fa-angle-double-right {
+	margin-right: 20px; 
+	margin-left: 20px;
+}
+
+
+.controls{
+	color: gray;
+}
+
+
+.legend_icon {
+	font-size: 120%;
+	color: yellow;
+}
+
+strong {
+	font-size: 150%;
+}

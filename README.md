@@ -16,6 +16,7 @@ I chose bar chart because it highlights the difference in internet population be
 There is a possibility to add a button to switch between types of charts, and this could be next logical step in improving the visualization.
 
 ##Feedback
+You can see the initial version in the __viz_v1__ folder.<br>
 My comments on the feedback are given in __*bold italics*__.
 
 ####Person 1:
@@ -59,6 +60,14 @@ __*The main thing that I wanted to highlight is the change in counties with most
 ####Person 6:
 The text is barely readable because the font is too thin.<br>
 __*Changed font from normal to semibold.*__
+
+#### Changes that I added in the improved version based on the feedback:
+- corrected typos and rewrote some sentences
+- added percentage of each country's population using internet
+- made that the if all bars don't fit on the screen, the number of bars is reduced appropriately
+- removed fat arrow syntax to ensure Safari and IE compatibility
+- changed font from normal to semibold
+- removed "equalizer" animation of the bars in last year: it looks good but distracts too much
 
 ##Resources
 __Data__:<br>
